@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ZAR Currency Converter</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --gold: #C9A84C;
+      --gold-light: #F0D080;
+      --green: #00C853;
+      --bg: #0A0C0F;
+      --surface: #111318;
+      --surface2: #181C23;
+      --border: rgba(201,168,76,0.18);
+      --text: #E8E6E0;
+      --muted: #6B6D72;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+    }
+
+    /* Header */
+    .site-header {
+      text-align: center;
+      padding: 32px 0 28px;
+    }
+
+    .flag-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(201,168,76,0.08);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 16px 6px 10px;
+      margin-bottom: 18px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+    }
+
+    .flag-badge .flag { font-size: 20px; }
+
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(48px, 10vw, 80px);
+      letter-spacing: 0.06em;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 60%, #8B6520 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 8px;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.05em;
+    }
+
+    /* Input card */
+    .input-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .input-card::after {
+      content: 'R';
+      position: absolute;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 100px;
+      color: rgba(201,168,76,0.05);
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .input-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .zar-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .currency-tag {
+      background: rgba(201,168,76,0.12);
+      border: 1px solid rgba(201,168,76,0.3);
+      color: var(--gold);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 0.1em;
+      padding: 12px 16px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+
+    #zarInput {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px;
+      letter-spacing: 0.05em;
+      padding: 12px 18px;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    #zarInput:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+    }
+
+    #zarInput::placeholder { color: var(--muted); }
+
+    /* Rate status bar */
+    .rate-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .rate-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Search & filter */
+    .controls-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .search-wrap {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+    }
+
+    #searchInput {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      padding: 12px 14px 12px 42px;
+      border-radius: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #searchInput:focus { border-color: var(--gold); }
+    #searchInput::placeholder { color: var(--muted); }
+
+    .region-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .region-select:focus { border-color: var(--gold); }
+    .region-select option { background: #1a1d25; }
+
+    /* Results grid */
+    #resultsGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .currency-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+      cursor: default;
+      animation: fadeUp 0.3s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .currency-card:hover {
+      border-color: rgba(201,168,76,0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+
+    .card-flag {
+      font-size: 28px;
+      width: 40px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .card-body { flex: 1; min-width: 0; }
+
+    .card-code {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .card-name {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .card-amount {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .card-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .card-rate {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* Loading / error */
+    .state-block {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(201,168,76,0.15);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .result-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .result-count span { color: var(--gold); }
+
+    /* Refresh btn */
+    .refresh-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--gold);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+
+    .refresh-btn:hover { background: rgba(201,168,76,0.08); }
+    .refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 480px) {
+      #resultsGrid { grid-template-columns: 1fr 1fr; }
+      .currency-card { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .card-amount { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="flag-badge">
+      <span class="flag">🇿🇦</span>
+      SOUTH AFRICAN RAND
+    </div>
+    <h1>ZAR CONVERTER</h1>
+    <p class="subtitle">Convert Rand to every currency on Earth</p>
+  </header>
+
+  <!-- Input card -->
+  <div class="input-card">
+    <div class="input-label">Enter Amount in ZAR</div>
+    <div class="zar-input-wrap">
+      <div class="currency-tag">ZAR</div>
+      <input type="number" id="zarInput" placeholder="1000" value="1000" min="0" step="any"/>
+    </div>
+    <div class="rate-bar">
+      <div class="rate-pill">
+        <span class="live-dot"></span>
+        <span id="rateStatus">Fetching live rates…</span>
+      </div>
+      <button class="refresh-btn" id="refreshBtn" onclick="fetchRates()">
+        <svg id="refreshIcon" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path d="M1 4v6h6M23 20v-6h-6"/>
+          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+        </svg>
+        REFRESH
+      </button>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls-row">
+    <div class="search-wrap">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" id="searchInput" placeholder="Search currency or country…"/>
+    </div>
+    <select class="region-select" id="regionSelect">
+      <option value="">All Regions</option>
+      <option value="africa">Africa</option>
+      <option value="americas">Americas</option>
+      <option value="europe">Europe</option>
+      <option value="asia">Asia</option>
+      <option value="oceania">Oceania</option>
+      <option value="middleeast">Middle East</option>
+    </select>
+  </div>
+
+  <div class="result-count" id="resultCount"></div>
+  <div id="resultsGrid"></div>
+  <div class="footer">Powered by exchangerate-api.com &nbsp;·&nbsp; Rates update every 24h &nbsp;·&nbsp; For informational use only</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── Currency metadata ──────────────────────────────────────────────────
+const CURRENCIES = {
+  USD:{name:"US Dollar",flag:"🇺🇸",region:"americas"},
+  EUR:{name:"Euro",flag:"🇪🇺",region:"europe"},
+  GBP:{name:"British Pound",flag:"🇬🇧",region:"europe"},
+  JPY:{name:"Japanese Yen",flag:"🇯🇵",region:"asia"},
+  CNY:{name:"Chinese Yuan",flag:"🇨🇳",region:"asia"},
+  AUD:{name:"Australian Dollar",flag:"🇦🇺",region:"oceania"},
+  CAD:{name:"Canadian Dollar",flag:"🇨🇦",region:"americas"},
+  CHF:{name:"Swiss Franc",flag:"🇨🇭",region:"europe"},
+  INR:{name:"Indian Rupee",flag:"🇮🇳",region:"asia"},
+  KRW:{name:"South Korean Won",flag:"🇰🇷",region:"asia"},
+  BRL:{name:"Brazilian Real",flag:"🇧🇷",region:"americas"},
+  MXN:{name:"Mexican Peso",flag:"🇲🇽",region:"americas"},
+  SGD:{name:"Singapore Dollar",flag:"🇸🇬",region:"asia"},
+  HKD:{name:"Hong Kong Dollar",flag:"🇭🇰",region:"asia"},
+  NOK:{name:"Norwegian Krone",flag:"🇳🇴",region:"europe"},
+  SEK:{name:"Swedish Krona",flag:"🇸🇪",region:"europe"},
+  DKK:{name:"Danish Krone",flag:"🇩🇰",region:"europe"},
+  NZD:{name:"New Zealand Dollar",flag:"🇳🇿",region:"oceania"},
+  THB:{name:"Thai Baht",flag:"🇹🇭",region:"asia"},
+  MYR:{name:"Malaysian Ringgit",flag:"🇲🇾",region:"asia"},
+  IDR:{name:"Indonesian Rupiah",flag:"🇮🇩",region:"asia"},
+  PHP:{name:"Philippine Peso",flag:"🇵🇭",region:"asia"},
+  VND:{name:"Vietnamese Dong",flag:"🇻🇳",region:"asia"},
+  TWD:{name:"Taiwan Dollar",flag:"🇹🇼",region:"asia"},
+  PKR:{name:"Pakistani Rupee",flag:"🇵🇰",region:"asia"},
+  BDT:{name:"Bangladeshi Taka",flag:"🇧🇩",region:"asia"},
+  LKR:{name:"Sri Lankan Rupee",flag:"🇱🇰",region:"asia"},
+  NPR:{name:"Nepalese Rupee",flag:"🇳🇵",region:"asia"},
+  AED:{name:"UAE Dirham",flag:"🇦🇪",region:"middleeast"},
+  SAR:{name:"Saudi Riyal",flag:"🇸🇦",region:"middleeast"},
+  QAR:{name:"Qatari Riyal",flag:"🇶🇦",region:"middleeast"},
+  KWD:{name:"Kuwaiti Dinar",flag:"🇰🇼",region:"middleeast"},
+  BHD:{name:"Bahraini Dinar",flag:"🇧🇭",region:"middleeast"},
+  OMR:{name:"Omani Rial",flag:"🇴🇲",region:"middleeast"},
+  JOD:{name:"Jordanian Dinar",flag:"🇯🇴",region:"middleeast"},
+  ILS:{name:"Israeli Shekel",flag:"🇮🇱",region:"middleeast"},
+  TRY:{name:"Turkish Lira",flag:"🇹🇷",region:"europe"},
+  PLN:{name:"Polish Zloty",flag:"🇵🇱",region:"europe"},
+  CZK:{name:"Czech Koruna",flag:"🇨🇿",region:"europe"},
+  HUF:{name:"Hungarian Forint",flag:"🇭🇺",region:"europe"},
+  RON:{name:"Romanian Leu",flag:"🇷🇴",region:"europe"},
+  BGN:{name:"Bulgarian Lev",flag:"🇧🇬",region:"europe"},
+  HRK:{name:"Croatian Kuna",flag:"🇭🇷",region:"europe"},
+  RSD:{name:"Serbian Dinar",flag:"🇷🇸",region:"europe"},
+  UAH:{name:"Ukrainian Hryvnia",flag:"🇺🇦",region:"europe"},
+  ISK:{name:"Icelandic Króna",flag:"🇮🇸",region:"europe"},
+  MKD:{name:"Macedonian Denar",flag:"🇲🇰",region:"europe"},
+  ALL:{name:"Albanian Lek",flag:"🇦🇱",region:"europe"},
+  BAM:{name:"Bosnian Mark",flag:"🇧🇦",region:"europe"},
+  RUB:{name:"Russian Ruble",flag:"🇷🇺",region:"europe"},
+  NGN:{name:"Nigerian Naira",flag:"🇳🇬",region:"africa"},
+  EGP:{name:"Egyptian Pound",flag:"🇪🇬",region:"africa"},
+  KES:{name:"Kenyan Shilling",flag:"🇰🇪",region:"africa"},
+  GHS:{name:"Ghanaian Cedi",flag:"🇬🇭",region:"africa"},
+  TZS:{name:"Tanzanian Shilling",flag:"🇹🇿",region:"africa"},
+  UGX:{name:"Ugandan Shilling",flag:"🇺🇬",region:"africa"},
+  ETB:{name:"Ethiopian Birr",flag:"🇪🇹",region:"africa"},
+  MAD:{name:"Moroccan Dirham",flag:"🇲🇦",region:"africa"},
+  TND:{name:"Tunisian Dinar",flag:"🇹🇳",region:"africa"},
+  DZD:{name:"Algerian Dinar",flag:"🇩🇿",region:"africa"},
+  XOF:{name:"West African CFA",flag:"🌍",region:"africa"},
+  XAF:{name:"Central African CFA",flag:"🌍",region:"africa"},
+  ZMW:{name:"Zambian Kwacha",flag:"🇿🇲",region:"africa"},
+  MWK:{name:"Malawian Kwacha",flag:"🇲🇼",region:"africa"},
+  BWP:{name:"Botswanan Pula",flag:"🇧🇼",region:"africa"},
+  NAD:{name:"Namibian Dollar",flag:"🇳🇦",region:"africa"},
+  MZN:{name:"Mozambican Metical",flag:"🇲🇿",region:"africa"},
+  SZL:{name:"Swazi Lilangeni",flag:"🇸🇿",region:"africa"},
+  LSL:{name:"Lesotho Loti",flag:"🇱🇸",region:"africa"},
+  ZWL:{name:"Zimbabwean Dollar",flag:"🇿🇼",region:"africa"},
+  RWF:{name:"Rwandan Franc",flag:"🇷🇼",region:"africa"},
+  SDG:{name:"Sudanese Pound",flag:"🇸🇩",region:"africa"},
+  AOA:{name:"Angolan Kwanza",flag:"🇦🇴",region:"africa"},
+  CDF:{name:"Congolese Franc",flag:"🇨🇩",region:"africa"},
+  ARS:{name:"Argentine Peso",flag:"🇦🇷",region:"americas"},
+  CLP:{name:"Chilean Peso",flag:"🇨🇱",region:"americas"},
+  COP:{name:"Colombian Peso",flag:"🇨🇴",region:"americas"},
+  PEN:{name:"Peruvian Sol",flag:"🇵🇪",region:"americas"},
+  UYU:{name:"Uruguayan Peso",flag:"🇺🇾",region:"americas"},
+  PYG:{name:"Paraguayan Guarani",flag:"🇵🇾",region:"americas"},
+  BOB:{name:"Bolivian Boliviano",flag:"🇧🇴",region:"americas"},
+  VES:{name:"Venezuelan Bolívar",flag:"🇻🇪",region:"americas"},
+  CRC:{name:"Costa Rican Colón",flag:"🇨🇷",region:"americas"},
+  GTQ:{name:"Guatemalan Quetzal",flag:"🇬🇹",region:"americas"},
+  HNL:{name:"Honduran Lempira",flag:"🇭🇳",region:"americas"},
+  NIO:{name:"Nicaraguan Córdoba",flag:"🇳🇮",region:"americas"},
+  PAB:{name:"Panamanian Balboa",flag:"🇵🇦",region:"americas"},
+  DOP:{name:"Dominican Peso",flag:"🇩🇴",region:"americas"},
+  TTD:{name:"Trinidad Dollar",flag:"🇹🇹",region:"americas"},
+  JMD:{name:"Jamaican Dollar",flag:"🇯🇲",region:"americas"},
+  BBD:{name:"Barbadian Dollar",flag:"🇧🇧",region:"americas"},
+  XCD:{name:"East Caribbean Dollar",flag:"🌎",region:"americas"},
+  KZT:{name:"Kazakhstani Tenge",flag:"🇰🇿",region:"asia"},
+  UZS:{name:"Uzbekistani Som",flag:"🇺🇿",region:"asia"},
+  AZN:{name:"Azerbaijani Manat",flag:"🇦🇿",region:"asia"},
+  GEL:{name:"Georgian Lari",flag:"🇬🇪",region:"asia"},
+  AMD:{name:"Armenian Dram",flag:"🇦🇲",region:"asia"},
+  BYR:{name:"Belarusian Ruble",flag:"🇧🇾",region:"europe"},
+  MDL:{name:"Moldovan Leu",flag:"🇲🇩",region:"europe"},
+  MNT:{name:"Mongolian Tögrög",flag:"🇲🇳",region:"asia"},
+  KGS:{name:"Kyrgyzstani Som",flag:"🇰🇬",region:"asia"},
+  TJS:{name:"Tajikistani Somoni",flag:"🇹🇯",region:"asia"},
+  AFN:{name:"Afghan Afghani",flag:"🇦🇫",region:"asia"},
+  IRR:{name:"Iranian Rial",flag:"🇮🇷",region:"middleeast"},
+  IQD:{name:"Iraqi Dinar",flag:"🇮🇶",region:"middleeast"},
+  SYP:{name:"Syrian Pound",flag:"🇸🇾",region:"middleeast"},
+  LBP:{name:"Lebanese Pound",flag:"🇱🇧",region:"middleeast"},
+  YER:{name:"Yemeni Rial",flag:"🇾🇪",region:"middleeast"},
+  FJD:{name:"Fijian Dollar",flag:"🇫🇯",region:"oceania"},
+  PGK:{name:"Papua New Guinean Kina",flag:"🇵🇬",region:"oceania"},
+  SBD:{name:"Solomon Islands Dollar",flag:"🇸🇧",region:"oceania"},
+  TOP:{name:"Tongan Paʻanga",flag:"🇹🇴",region:"oceania"},
+  WST:{name:"Samoan Tālā",flag:"🇼🇸",region:"oceania"},
+};
+
+// ── State ──────────────────────────────────────────────────────────────
+let zarRates = {};   // rates keyed from ZAR
+let lastUpdated = null;
+
+// ── Fetch rates ────────────────────────────────────────────────────────
+async function fetchRates() {
+  const btn = document.getElementById('refreshBtn');
+  const icon = document.getElementById('refreshIcon');
+  btn.classList.add('spinning');
+  document.getElementById('rateStatus').textContent = 'Fetching live rates…';
+  showLoading();
+
+  try {
+    // Free API — rates from ZAR
+    const res = await fetch('https://api.exchangerate-api.com/v4/latest/ZAR');
+    if (!res.ok) throw new Error('Network response not ok');
+    const data = await res.json();
+    zarRates = data.rates;
+    lastUpdated = new Date();
+    document.getElementById('rateStatus').textContent =
+      `Updated ${lastUpdated.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+    renderCards();
+  } catch (e) {
+    document.getElementById('rateStatus').textContent = 'Rate fetch failed — using demo rates';
+    // Fallback demo rates (approx May 2025)
+    zarRates = {
+      USD:0.054,EUR:0.050,GBP:0.043,JPY:8.1,CNY:0.39,AUD:0.083,CAD:0.074,
+      CHF:0.049,INR:4.5,KRW:73,BRL:0.31,MXN:1.06,SGD:0.073,HKD:0.42,
+      NOK:0.57,SEK:0.57,DKK:0.37,NZD:0.090,THB:1.91,MYR:0.25,IDR:873,
+      PHP:3.13,VND:1363,TWD:1.74,PKR:15.1,BDT:6.42,LKR:16.7,NPR:7.22,
+      AED:0.20,SAR:0.20,QAR:0.20,KWD:0.017,BHD:0.020,OMR:0.021,JOD:0.038,
+      ILS:0.20,TRY:1.82,PLN:0.21,CZK:1.27,HUF:20.3,RON:0.25,BGN:0.098,
+      HRK:0.38,RSD:5.88,UAH:2.21,ISK:7.52,NGN:87,EGP:2.75,KES:7.05,
+      GHS:0.82,TZS:141,UGX:202,ETB:6.72,MAD:0.54,TND:0.17,DZD:7.32,
+      ZMW:1.49,BWP:0.74,NAD:1.0,MZN:3.48,SZL:1.0,LSL:1.0,RWF:77,
+      ARS:55,CLP:52,COP:227,PEN:0.20,UYU:2.27,BOB:0.37,CRC:28,GTQ:0.42,
+      HNL:1.34,DOP:3.23,JMD:8.51,KZT:27,GEL:0.15,MNT:187,AFN:3.84,
+      IRR:2280,IQD:70.9,FJD:0.12,PGK:0.21,
+      XOF:32.7,XAF:32.7,XCD:0.146,TTD:0.37,BBD:0.109,
+    };
+    renderCards();
+  }
+  btn.classList.remove('spinning');
+}
+
+// ── Show loading skeleton ──────────────────────────────────────────────
+function showLoading() {
+  document.getElementById('resultsGrid').innerHTML = `
+    <div class="state-block" style="grid-column:1/-1">
+      <div class="spinner"></div>
+      <div style="font-family:'DM Mono',monospace;font-size:13px;letter-spacing:.06em;">Loading rates…</div>
+    </div>`;
+  document.getElementById('resultCount').textContent = '';
+}
+
+// ── Format number ──────────────────────────────────────────────────────
+function fmt(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(2) + 'M';
+  if (n >= 10000)   return n.toLocaleString(undefined,{maximumFractionDigits:0});
+  if (n >= 100)     return n.toLocaleString(undefined,{maximumFractionDigits:2});
+  if (n >= 1)       return n.toLocaleString(undefined,{maximumFractionDigits:4});
+  return n.toLocaleString(undefined,{maximumFractionDigits:6});
+}
+
+// ── Render cards ──────────────────────────────────────────────────────
+function renderCards() {
+  const amount   = parseFloat(document.getElementById('zarInput').value) || 0;
+  const search   = document.getElementById('searchInput').value.toLowerCase().trim();
+  const region   = document.getElementById('regionSelect').value;
+  const grid     = document.getElementById('resultsGrid');
+
+  const filtered = Object.entries(CURRENCIES).filter(([code, info]) => {
+    if (code === 'ZAR') return false;
+    if (region && info.region !== region) return false;
+    if (search && !code.toLowerCase().includes(search) &&
+        !info.name.toLowerCase().includes(search)) return false;
+    return zarRates[code] !== undefined;
+  });
+
+  document.getElementById('resultCount').innerHTML =
+    `<span>${filtered.length}</span> currencies`;
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="state-block" style="grid-column:1/-1">No currencies match your search.</div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(([code, info], i) => {
+    const rate    = zarRates[code] || 0;
+    const value   = amount * rate;
+    const perZar  = rate.toLocaleString(undefined,{maximumFractionDigits:6});
+    return `
+      <div class="currency-card" style="animation-delay:${Math.min(i*18,300)}ms">
+        <div class="card-flag">${info.flag}</div>
+        <div class="card-body">
+          <div class="card-code">${code}</div>
+          <div class="card-name">${info.name}</div>
+        </div>
+        <div class="card-amount">
+          <div class="card-value">${fmt(value)}</div>
+          <div class="card-rate">1 ZAR = ${perZar}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── Event listeners ────────────────────────────────────────────────────
+document.getElementById('zarInput').addEventListener('input', renderCards);
+document.getElementById('searchInput').addEventListener('input', renderCards);
+document.getElementById('regionSelect').addEventListener('change', renderCards);
+
+// ── Init ───────────────────────────────────────────────────────────────
+fetchRates();
+</script>
+</body>
+</html>
